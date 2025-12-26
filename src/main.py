@@ -24,6 +24,32 @@ def get_ffmpeg_binary():
     # 开发环境/系统环境 fallback
     return filename
 
+def check_encoder_availability(ffmpeg_bin, encoder_name):
+    """
+    通过生成 1 帧空白视频来测试编码器是否真的可用（驱动是否正常）。
+    返回: True (可用) / False (驱动不支持或报错)
+    """
+    try:
+        # 构建一个极小的测试命令：
+        # -f lavfi -i color=c=black:s=64x64:d=0.1  -> 生成 0.1秒 64x64 的黑屏
+        # -c:v encoder_name                      -> 尝试使用指定的编码器
+        # -f null -                              -> 输出扔进黑洞，不写文件
+        cmd = [
+            ffmpeg_bin, 
+            '-hide_banner', '-loglevel', 'error',
+            '-f', 'lavfi', '-i', 'color=c=black:s=64x64:d=0.1',
+            '-c:v', encoder_name,
+            '-f', 'null', '-'
+        ]
+        
+        # 运行测试
+        subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return True
+    except subprocess.CalledProcessError:
+        return False
+    except Exception:
+        return False
+
 def detect_encoders(ffmpeg_bin):
     """
     通过运行 ffmpeg -encoders 探测可用硬件编码器。
@@ -38,9 +64,9 @@ def detect_encoders(ffmpeg_bin):
         output = result.stdout
 
         if "h264_nvenc" in output:
-            available['nvidia'] = True
+            available['nvidia'] = True if check_encoder_availability(ffmpeg_bin, 'h264_nvenc') else False
         if "h264_amf" in output:  # AMF 是 AMD 的主要接口
-            available['amd'] = True
+            available['amd'] = True if check_encoder_availability(ffmpeg_bin, 'h264_amf') else False
         # Linux 下 AMD 有时也用 vaapi，这里为了简化逻辑优先 check amf
         # 如果需要更通用的 Linux AMD 支持，可以检测 h264_vaapi
             
