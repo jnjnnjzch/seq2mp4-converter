@@ -1,3 +1,4 @@
 pims
 pyinstaller
 numpy
+scikit-image
