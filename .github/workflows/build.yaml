@@ -13,40 +13,24 @@ permissions:
 jobs:
   build:
     name: Build on ${{ matrix.os }}
-    runs-on: ${{ matrix.runner }}
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        include:
-          # Linux: 使用最新的 Runner，但在步骤里我们会用 Docker 容器
-          - os: linux
-            runner: ubuntu-latest
-            use_container: true  # 标记：这个任务要用容器
-          # Windows: 保持不变
-          - os: windows
-            runner: windows-latest
-            use_container: false
-    container: ${{ matrix.use_container && 'python:3.9-slim-buster' || '' }}
+        os: [ubuntu-22.04, windows-latest]
 
     steps:
     - uses: actions/checkout@v3
 
     - name: Set up Python
-      if: matrix.os == 'windows'
       uses: actions/setup-python@v4
       with:
-        python-version: '3.9'
-
-    - name: Install System Dependencies (Linux Container Only)
-      if: matrix.os == 'linux'
-      run: |
-        # 容器是精简版，需要补装基本工具
-        apt-get update && apt-get install -y wget xz-utils binutils
+        python-version: '3.11'
 
     - name: Install Dependencies
       run: |
         pip install pims pyinstaller numpy tqdm scikit-image
 
-    - name: Download FFmpeg
+    - name: Download FFmpeg (BtbN Version)
       run: python scripts/download_ffmpeg.py
 
     # --- Windows 打包 ---
@@ -59,7 +43,7 @@ jobs:
     - name: Build with PyInstaller (Linux)
       if: runner.os == 'Linux'
       run: |
-        pyinstaller --onefile --add-binary "binaries/ffmpeg:." --copy-metadata imageio --hidden-import imageio --name seq2mp4-linux src/main.py
+        pyinstaller --onefile --add-binary "binaries/ffmpeg:." --name seq2mp4-linux src/main.py
 
     # (可选) 依然保留 Artifact 上传，作为双重备份
     - name: Upload Artifacts
