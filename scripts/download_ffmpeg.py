@@ -54,10 +54,10 @@ def download_and_extract():
         print(f"FFmpeg setup complete: {os.path.join(base_dir, 'ffmpeg.exe')}")
 
     elif "linux" in system:
-        # Download Linux FFmpeg (John Van Sickle static build)
-        url = "https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz"
+        # Download Linux FFmpeg (BtbN - with NVENC)
+        url = "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl.tar.xz"
         tar_path = "ffmpeg.tar.xz"
-        print(f"Downloading Linux FFmpeg from: {url} ...")
+        print(f"Downloading Linux FFmpeg (BtbN - with NVENC): {url} ...")
         
         try:
             req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
