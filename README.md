@@ -1,17 +1,18 @@
 # SEQ2MP4 Converter
 
-A standalone tool to convert NorPix `.seq` files to compressed MP4 using FFmpeg. It automatically detects hardware acceleration (NVIDIA NVENC / AMD AMF) to speed up conversion, falling back to CPU if no GPU is available.
+A standalone tool to convert NorPix `.seq` files to compressed MP4 using FFmpeg. It automatically detects hardware acceleration (NVIDIA NVENC / AMD AMF / Apple VideoToolbox) to speed up conversion, falling back to CPU if no GPU is available.
 
 ## Download
 Go to the **[Releases](../../releases)** page to download the executable for your platform:
 * **Windows**: `seq2mp4-win.exe`
 * **Linux**: `seq2mp4-linux`
+* **macOS**: `seq2mp4-mac` (Apple Silicon & Intel)
 
 ---
 
 ## Usage Guide
 
-This is a command-line tool. Please use **Terminal** (Linux) or **PowerShell / CMD** (Windows) to run it.
+This is a command-line tool. Please use **Terminal** (Linux/macOS) or **PowerShell / CMD** (Windows) to run it.
 
 ### 🪟 Windows
 
@@ -43,9 +44,33 @@ This is a command-line tool. Please use **Terminal** (Linux) or **PowerShell / C
     ./seq2mp4-linux /path/to/video.seq --mode small
     ```
 
+### 🍎 macOS
+
+**⚠️ First Run Notice (Security Warning):**
+When you run this tool for the first time, macOS may block it because the developer is unverified. To bypass this:
+1.  Locate `seq2mp4-mac` in **Finder**.
+2.  **Right-click** (or Control-click) the file and select **Open**.
+3.  Click **Open** in the dialog box.
+*(You only need to do this once.)*
+
+**Running the tool:**
+1.  Open Terminal.
+2.  Grant execution permission:
+    ```bash
+    chmod +x /path/to/downloaded/seq2mp4-mac
+    ```
+3.  Run the command:
+    ```bash
+    # Basic conversion
+    /path/to/seq2mp4-mac /path/to/video.seq
+
+    # Small size mode
+    /path/to/seq2mp4-mac /path/to/video.seq --mode small
+    ```
+
 ---
 
-## Command Line Options (参数详解)
+## Command Line Options
 
 | Argument | Description | Default |
 | :--- | :--- | :--- |
@@ -72,6 +97,7 @@ The tool automatically detects your hardware on startup:
 
 - NVIDIA: Uses h264_nvenc
 - AMD: Uses h264_amf
+- MacOS: Uses h264_videotoolbox (M1/M2/M3/M4 & Intel)
 - CPU: Uses libx264 (Fallback if no GPU found)
 
 ## License
