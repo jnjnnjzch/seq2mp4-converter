@@ -3,7 +3,6 @@ import os
 import subprocess
 import argparse
 import platform
-import pims
 from pims import NorpixSeq
 
 def get_resource_path(relative_path):
@@ -150,7 +149,6 @@ def process_video(input_file, mode, args):
         proc = subprocess.Popen(full_cmd, stdin=subprocess.PIPE)
         for i, frame in enumerate(video):
             proc.stdin.write(frame.tobytes())
-            if i % 100 == 0: print(".", end="", flush=True)
         
         proc.stdin.close()
         proc.wait()
