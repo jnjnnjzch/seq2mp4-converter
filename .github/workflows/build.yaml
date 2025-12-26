@@ -16,7 +16,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-20.04, windows-latest]
 
     steps:
     - uses: actions/checkout@v3
@@ -28,7 +28,7 @@ jobs:
 
     - name: Install Dependencies
       run: |
-        pip install pims pyinstaller numpy tqdm
+        pip install pims pyinstaller numpy tqdm scikit-image
 
     - name: Download FFmpeg (BtbN Version)
       run: python scripts/download_ffmpeg.py
