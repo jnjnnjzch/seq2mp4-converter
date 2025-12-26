@@ -90,5 +90,35 @@ def download_and_extract():
         os.chmod(os.path.join(base_dir, "ffmpeg"), 0o755)
         print(f"FFmpeg setup complete: {os.path.join(base_dir, 'ffmpeg')}")
 
+    elif "darwin" in system:
+        # Download Mac FFmpeg (Evermeet)
+        url = "https://evermeet.cx/ffmpeg/getrelease/zip"
+        zip_path = "ffmpeg_mac.zip"
+        print(f"Downloading Mac FFmpeg (Evermeet): {url} ...")
+
+        try:
+            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+            with urllib.request.urlopen(req) as response, open(zip_path, 'wb') as out_file:
+                shutil.copyfileobj(response, out_file)
+        except Exception as e:
+            print(f"Download failed: {e}")
+            sys.exit(1)
+        
+        print("Extracting zip file...")
+        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            zip_ref.extractall("temp_ffmpeg")
+            
+        src = os.path.join("temp_ffmpeg", "ffmpeg")
+        dst = os.path.join(base_dir, "ffmpeg")
+        
+        if os.path.exists(src):
+            print(f"Moving {src} -> {dst}")
+            shutil.move(src, dst)
+            os.chmod(dst, 0o755) # 赋予执行权限
+            print(f"FFmpeg setup complete: {dst}")
+        else:
+            print("Error: ffmpeg binary not found in extracted files")
+            sys.exit(1)
+
 if __name__ == "__main__":
     download_and_extract()

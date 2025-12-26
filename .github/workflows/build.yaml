@@ -16,7 +16,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-22.04, windows-latest]
+        os: [ubuntu-22.04, windows-latest, macos-latest]
 
     steps:
     - uses: actions/checkout@v3
@@ -44,6 +44,11 @@ jobs:
       if: runner.os == 'Linux'
       run: |
         pyinstaller --onefile --add-binary "binaries/ffmpeg:." --name seq2mp4-linux src/main.py
+    
+    - name: Build with PyInstaller (MacOS)
+      if: runner.os == 'macOS'
+      run: |
+        pyinstaller --onefile --add-binary "binaries/ffmpeg:." --name seq2mp4-mac src/main.py
 
     # (可选) 依然保留 Artifact 上传，作为双重备份
     - name: Upload Artifacts
@@ -60,8 +65,10 @@ jobs:
         # 这里指定要上传的文件，支持通配符
         # Linux 会找到 dist/seq2mp4-linux
         # Windows 会找到 dist/seq2mp4-win.exe
+        # MacOS 会找到 dist/seq2mp4-mac
         files: |
           dist/seq2mp4-linux
           dist/seq2mp4-win.exe
+          dist/seq2mp4-mac
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

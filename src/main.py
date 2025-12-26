@@ -69,6 +69,8 @@ def detect_encoders(ffmpeg_bin):
             available['amd'] = True if check_encoder_availability(ffmpeg_bin, 'h264_amf') else False
         # Linux 下 AMD 有时也用 vaapi，这里为了简化逻辑优先 check amf
         # 如果需要更通用的 Linux AMD 支持，可以检测 h264_vaapi
+        if "h264_videotoolbox" in output:
+            available['mac_vt'] = True if check_encoder_availability(ffmpeg_bin, 'h264_videotoolbox') else False
             
     except Exception as e:
         print(f"警告: 无法探测编码器支持情况 ({e})，将默认使用 CPU。")
@@ -113,6 +115,26 @@ def get_encoding_params(hardware_type, mode, user_args):
         # AMD preset: speed, balanced, quality
         cmd.extend(['-quality', config['preset']])
 
+    elif hardware_type == 'mac_vt':
+        cmd.extend(['-c:v', 'h264_videotoolbox'])
+        # 映射质量参数: 
+        # 用户输入的 cq 是 0-51 (越小越好)
+        # VideoToolbox 的 -q:v 是 1-100 (越大越好)
+        # 我们做一个简单的转换
+        if mode == 'small':
+            # 对应高压缩 (cq=28) -> VideoToolbox q=50 左右
+            q_val = 50
+        else:
+            # 对应高质量 (cq=20) -> VideoToolbox q=75 左右
+            q_val = 75
+        # 如果用户手动指定了 cq，我们尝试映射一下
+        if user_args.cq is not None:
+            # 简单线性映射: 0(cq) -> 100(q), 51(cq) -> 0(q)
+            q_val = int(100 - (user_args.cq * 2))
+            q_val = max(1, min(100, q_val)) # 限制在 1-100
+
+        cmd.extend(['-q:v', str(q_val)])
+
     else:
         # CPU Fallback
         cmd.extend(['-c:v', 'libx264'])
@@ -138,6 +160,8 @@ def process_video(input_file, mode, args):
         hardware = 'nvidia'
     elif encoders['amd']:
         hardware = 'amd'
+    elif encoders['mac_vt']: # 使用 get 防止旧字典报错
+        hardware = 'mac_vt'
     else:
         hardware = 'cpu'
 
