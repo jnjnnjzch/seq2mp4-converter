@@ -1,0 +1,18 @@
+# Python 常见忽略
+__pycache__/
+*.pyc
+build/
+dist/
+*.spec
+
+# 忽略本地的二进制文件
+binaries/
+temp_ffmpeg/
+ffmpeg
+ffmpeg.exe
+ffmpeg.tar.xz
+*.seq
+*.mp4
+
+*/converter.ipynb
+*/converter.py

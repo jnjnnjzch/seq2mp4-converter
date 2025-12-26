@@ -1,0 +1,3 @@
+pims
+pyinstaller
+numpy

@@ -1,0 +1,51 @@
+name: Build Binaries
+
+on:
+  push:
+    tags:
+      - 'v*' # 只有打 tag (如 v1.0) 时才触发构建，平时 push 不跑，节省资源
+  workflow_dispatch: # 允许手动点击按钮触发
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }} # 魔法在这里：GitHub 会根据列表分配不同的系统
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install Dependencies
+      run: |
+        pip install pims pyinstaller numpy
+
+    - name: Download FFmpeg
+      run: python scripts/download_ffmpeg.py
+
+    # --- Windows 打包命令 ---
+    - name: Build with PyInstaller (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        # 注意: Windows 下 add-binary 使用分号 ; 分隔
+        pyinstaller --onefile --add-binary "binaries\ffmpeg.exe;." --name seq2mp4-win src/main.py
+
+    # --- Linux 打包命令 ---
+    - name: Build with PyInstaller (Linux)
+      if: runner.os == 'Linux'
+      run: |
+        # 注意: Linux 下 add-binary 使用冒号 : 分隔
+        pyinstaller --onefile --add-binary "binaries/ffmpeg:." --name seq2mp4-linux src/main.py
+
+    # --- 上传构建产物 ---
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: seq2mp4-${{ runner.os }}
+        path: dist/seq2mp4*
