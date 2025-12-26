@@ -19,7 +19,7 @@ def download_and_extract():
 
     if "windows" in system:
         # Download Windows FFmpeg (Gyan.dev)
-        url = "https://github.com/GyanD/codexffmpeg/releases/download/5.1.2/ffmpeg-5.1.2-essentials_build.zip"        
+        url = "https://github.com/GyanD/codexffmpeg/releases/download/4.4.1/ffmpeg-4.4.1-essentials_build.zip"        
         zip_path = "ffmpeg.zip"
         print(f"Downloading Windows FFmpeg from: {url} ...")
         
