@@ -1,15 +1,19 @@
-name: Build Binaries
+name: Build and Release
 
 on:
   push:
     tags:
-      - 'v*' # 只有打 tag (如 v1.0) 时才触发构建，平时 push 不跑，节省资源
-  workflow_dispatch: # 允许手动点击按钮触发
+      - 'v*' # 只有打 tag (如 v1.0.2) 时才触发，平时 push 不跑
+  workflow_dispatch: # 允许手动触发
+
+# 【关键点 1】赋予写权限，否则无法创建 Release
+permissions:
+  contents: write
 
 jobs:
   build:
     name: Build on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }} # 魔法在这里：GitHub 会根据列表分配不同的系统
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
@@ -24,28 +28,40 @@ jobs:
 
     - name: Install Dependencies
       run: |
-        pip install pims pyinstaller numpy
+        pip install pims pyinstaller numpy tqdm
 
-    - name: Download FFmpeg
+    - name: Download FFmpeg (BtbN Version)
       run: python scripts/download_ffmpeg.py
 
-    # --- Windows 打包命令 ---
+    # --- Windows 打包 ---
     - name: Build with PyInstaller (Windows)
       if: runner.os == 'Windows'
       run: |
-        # 注意: Windows 下 add-binary 使用分号 ; 分隔
         pyinstaller --onefile --add-binary "binaries\ffmpeg.exe;." --name seq2mp4-win src/main.py
 
-    # --- Linux 打包命令 ---
+    # --- Linux 打包 ---
     - name: Build with PyInstaller (Linux)
       if: runner.os == 'Linux'
       run: |
-        # 注意: Linux 下 add-binary 使用冒号 : 分隔
         pyinstaller --onefile --add-binary "binaries/ffmpeg:." --name seq2mp4-linux src/main.py
 
-    # --- 上传构建产物 ---
+    # (可选) 依然保留 Artifact 上传，作为双重备份
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       with:
         name: seq2mp4-${{ runner.os }}
         path: dist/seq2mp4*
+
+    # 【关键点 2】自动发布 Release
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        # 这里指定要上传的文件，支持通配符
+        # Linux 会找到 dist/seq2mp4-linux
+        # Windows 会找到 dist/seq2mp4-win.exe
+        files: |
+          dist/seq2mp4-linux
+          dist/seq2mp4-win.exe
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
