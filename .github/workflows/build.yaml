@@ -3,10 +3,9 @@ name: Build and Release
 on:
   push:
     tags:
-      - 'v*' # 只有打 tag (如 v1.0.2) 时才触发，平时 push 不跑
-  workflow_dispatch: # 允许手动触发
+      - 'v*'
+  workflow_dispatch:
 
-# 【关键点 1】赋予写权限，否则无法创建 Release
 permissions:
   contents: write
 
@@ -21,17 +20,17 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Set up Python
+    - name: Set up Python (Linux/Windows)
+      if: runner.os != 'macOS'
       uses: actions/setup-python@v4
       with:
         python-version: '3.11'
 
-    - name: Install Dependencies
+    - name: Install Dependencies (Linux/Windows)
+      if: runner.os != 'macOS'
       run: |
-        pip install pims pyinstaller numpy tqdm scikit-image
-
-    - name: Download FFmpeg (BtbN Version)
-      run: python scripts/download_ffmpeg.py
+        pip install -r requirements.txt
+        python scripts/download_ffmpeg.py
 
     # --- Windows 打包 ---
     - name: Build with PyInstaller (Windows)
@@ -44,31 +43,52 @@ jobs:
       if: runner.os == 'Linux'
       run: |
         pyinstaller --onefile --add-binary "binaries/ffmpeg:." --name seq2mp4-linux src/main.py
-    
-    - name: Build with PyInstaller (MacOS)
+
+    - name: Set up Python ARM64 (macOS)
+      if: runner.os == 'macOS'
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        architecture: 'arm64' # <--- 显式指定 ARM64
+
+    - name: Build ARM64 (macOS)
       if: runner.os == 'macOS'
       run: |
-        pyinstaller --onefile --add-binary "binaries/ffmpeg:." --name seq2mp4-mac src/main.py
+        pip install -r requirements.txt
+        python scripts/download_ffmpeg.py
+        echo "Running on $(uname -m), Python is $(which python)"
+        pyinstaller --onefile --add-binary "binaries/ffmpeg:." --name seq2mp4-mac-arm64 src/main.py
 
-    # (可选) 依然保留 Artifact 上传，作为双重备份
+    - name: Set up Python x64 (macOS)
+      if: runner.os == 'macOS'
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        architecture: 'x64'
+
+    - name: Build x64 (macOS)
+      if: runner.os == 'macOS'
+      run: |
+        rm -f binaries/ffmpeg
+        pip install -r requirements.txt
+        python scripts/download_ffmpeg.py
+        echo "Running on $(uname -m), Python is $(which python)"
+        pyinstaller --onefile --add-binary "binaries/ffmpeg:." --name seq2mp4-mac-x64 src/main.py
+
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       with:
         name: seq2mp4-${{ runner.os }}
         path: dist/seq2mp4*
 
-    # 【关键点 2】自动发布 Release
     - name: Release
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/')
       with:
-        # 这里指定要上传的文件，支持通配符
-        # Linux 会找到 dist/seq2mp4-linux
-        # Windows 会找到 dist/seq2mp4-win.exe
-        # MacOS 会找到 dist/seq2mp4-mac
         files: |
           dist/seq2mp4-linux
           dist/seq2mp4-win.exe
-          dist/seq2mp4-mac
+          dist/seq2mp4-mac-arm64
+          dist/seq2mp4-mac-x64
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
