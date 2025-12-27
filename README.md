@@ -46,26 +46,35 @@ This is a command-line tool. Please use **Terminal** (Linux/macOS) or **PowerShe
 
 ### 🍎 macOS
 
-**⚠️ First Run Notice (Security Warning):**
-When you run this tool for the first time, macOS may block it because the developer is unverified. To bypass this:
-1.  Locate `seq2mp4-mac` in **Finder**.
+**1. Choose the correct version:**
+* **Apple Silicon (M1/M2/M3...):** Download `seq2mp4-mac-arm64` (Recommended)
+* **Intel Mac:** Download `seq2mp4-mac-x64`
+
+> *Note: If you are unsure, type `uname -m` in Terminal. `arm64` means Apple Silicon, `x86_64` means Intel.*
+
+**2. ⚠️ First Run Notice (Security Warning):**
+Since this tool is not signed by Apple, macOS will block it by default. To bypass this:
+1.  Locate the downloaded file in **Finder**.
 2.  **Right-click** (or Control-click) the file and select **Open**.
 3.  Click **Open** in the dialog box.
 *(You only need to do this once.)*
 
-**Running the tool:**
-1.  Open Terminal.
-2.  Grant execution permission:
+**3. Running the tool:**
+Open Terminal and run the following commands (replace the filename with the one you downloaded):
+
+1.  Grant execution permission:
     ```bash
-    chmod +x /path/to/downloaded/seq2mp4-mac
+    # Replace with the actual path to your downloaded file
+    chmod +x /path/to/seq2mp4-mac-arm64
     ```
-3.  Run the command:
+
+2.  Run the conversion:
     ```bash
     # Basic conversion
-    /path/to/seq2mp4-mac /path/to/video.seq
+    /path/to/seq2mp4-mac-arm64 /path/to/video.seq
 
     # Small size mode
-    /path/to/seq2mp4-mac /path/to/video.seq --mode small
+    /path/to/seq2mp4-mac-arm64 /path/to/video.seq --mode small
     ```
 
 ---
@@ -95,10 +104,10 @@ seq2mp4-win.exe input.seq --mode small --cq 24
 ### Hardware Acceleration Support
 The tool automatically detects your hardware on startup:
 
-- NVIDIA: Uses h264_nvenc
-- AMD: Uses h264_amf
-- MacOS: Uses h264_videotoolbox (M1/M2/M3/M4 & Intel)
-- CPU: Uses libx264 (Fallback if no GPU found)
+- NVIDIA: Uses `h264_nvenc`
+- AMD: Uses `h264_amf`
+- MacOS: Uses `h264_videotoolbox` (M1/M2/M3/M4 & Intel)
+- CPU: Uses `libx264` (Fallback if no GPU found)
 
 ## License
 This project is licensed under the GPLv3 License.
