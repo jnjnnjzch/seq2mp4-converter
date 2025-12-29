@@ -18,25 +18,15 @@ jobs:
 
     - name: Build in Manylinux2014 Container
       run: |
-        # 使用 docker run 手动启动容器并执行编译脚本
-        # -v $PWD:/work  : 把当前代码目录挂载到容器的 /work
-        # -w /work       : 设置工作目录
         docker run --rm -v $PWD:/work -w /work quay.io/pypa/manylinux2014_x86_64 /bin/bash -c "
-          # 1. 安装基础工具 (CentOS 7 yum)
           yum install -y wget xz && \\
-          
-          # 定义 Python 路径 (容器内)
           export PYBIN=/opt/python/cp311-cp311/bin && \\
-          
-          # 2. 安装依赖
-          \$PYBIN/pip install -r requirements.txt && \\
-          \$PYBIN/pip install pyinstaller && \\
-          
-          # 3. 下载静态 FFmpeg
-          \$PYBIN/python scripts/download_ffmpeg.py && \\
-          
-          # 4. 执行打包 (注意 Linux 分隔符是 :)
-          \$PYBIN/pyinstaller --onefile --clean \\
+          export PATH=\$PYBIN:\$PATH && \\
+          pip install --upgrade pip && \\
+          pip install -r requirements.txt -v --prefer-binary && \\
+          pip install pyinstaller && \\
+          python scripts/download_ffmpeg.py && \\
+          pyinstaller --onefile --clean \\
             --add-binary 'binaries/ffmpeg:.' \\
             --name seq2mp4-linux \\
             src/main.py
