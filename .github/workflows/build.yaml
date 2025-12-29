@@ -19,17 +19,29 @@ jobs:
       run: |
         docker run --rm -v $PWD:/work -w /work quay.io/pypa/manylinux2014_x86_64 /bin/bash -c "
           set -e
-          yum install -y wget xz make gcc zlib-devel bzip2-devel libffi-devel tar
+          yum install -y wget xz make gcc zlib-devel bzip2-devel libffi-devel tar perl-core openssl-devel
+          cd /tmp
+          wget -q https://www.openssl.org/source/openssl-1.1.1w.tar.gz --no-check-certificate
+          tar xzf openssl-1.1.1w.tar.gz
+          cd openssl-1.1.1w
+          ./config --prefix=/usr/local/ssl --openssldir=/usr/local/ssl shared zlib
+          make -j\$(nproc)
+          make install
+          echo '/usr/local/ssl/lib' > /etc/ld.so.conf.d/openssl.conf
+          ldconfig
           cd /tmp
           wget -q https://www.python.org/ftp/python/3.11.9/Python-3.11.9.tgz
           tar xzf Python-3.11.9.tgz
           cd Python-3.11.9
-          ./configure --enable-shared --prefix=/usr/local LDFLAGS=\"-Wl,-rpath=/usr/local/lib\"
+          ./configure --enable-shared \\
+            --prefix=/usr/local \\
+            --with-openssl=/usr/local/ssl \\
+            --with-openssl-rpath=auto
           make -j\$(nproc)
           make install
           ldconfig
           cd /work
-          python3 --version
+          python3 -c 'import ssl; print(\"SSL is working:\", ssl.OPENSSL_VERSION)'
           python3 -m pip install --upgrade pip
           python3 -m pip install -r requirements.txt --prefer-binary
           python3 -m pip install pyinstaller
