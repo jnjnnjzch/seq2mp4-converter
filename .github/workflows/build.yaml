@@ -11,46 +11,34 @@ permissions:
 
 jobs:
   build-linux:
-    name: Build Linux (Legacy Compatible)
+    name: Build Linux
     runs-on: ubuntu-latest
+    container:
+      image: quay.io/pypa/manylinux_2_28_x86_64
     steps:
     - uses: actions/checkout@v3
-    - name: Build in Docker
+
+    - name: Install System Dependencies
       run: |
-        docker run --rm -v $PWD:/work -w /work quay.io/pypa/manylinux2014_x86_64 /bin/bash -c "
-          set -e
-          yum install -y wget xz xz-devel make gcc zlib-devel bzip2-devel libffi-devel tar perl-core openssl-devel
-          cd /tmp
-          wget -q https://www.openssl.org/source/openssl-1.1.1w.tar.gz --no-check-certificate
-          tar xzf openssl-1.1.1w.tar.gz
-          cd openssl-1.1.1w
-          ./config --prefix=/usr/local/ssl --openssldir=/usr/local/ssl shared zlib
-          make -j\$(nproc)
-          make install
-          echo '/usr/local/ssl/lib' > /etc/ld.so.conf.d/openssl.conf
-          ldconfig
-          cd /tmp
-          wget -q https://www.python.org/ftp/python/3.11.9/Python-3.11.9.tgz
-          tar xzf Python-3.11.9.tgz
-          cd Python-3.11.9
-          ./configure --enable-shared \\
-            --prefix=/usr/local \\
-            --with-openssl=/usr/local/ssl \\
-            --with-openssl-rpath=auto
-          make -j\$(nproc)
-          make install
-          ldconfig
-          cd /work
-          python3 -c 'import ssl; print(\"SSL is working:\", ssl.OPENSSL_VERSION)'
-          python3 -m pip install --upgrade pip
-          python3 -m pip install -r requirements.txt --prefer-binary
-          python3 -m pip install pyinstaller
-          python3 scripts/download_ffmpeg.py
-          python3 -m PyInstaller --onefile --clean \\
-            --add-binary 'binaries/ffmpeg:.' \\
-            --name seq2mp4-linux \\
-            src/main.py
-        "
+        dnf install -y python3.11 python3.11-pip python3.11-devel xz wget
+
+    - name: Install Requirements
+      run: |
+        python3.11 -c "import ssl; print('SSL OK:', ssl.OPENSSL_VERSION)"
+        python3.11 -m pip install --upgrade pip
+        python3.11 -m pip install -r requirements.txt --prefer-binary
+        python3.11 -m pip install pyinstaller
+
+    - name: Setup FFmpeg
+      run: |
+        python3.11 scripts/download_ffmpeg.py
+
+    - name: Build with PyInstaller
+      run: |
+        python3.11 -m PyInstaller --onefile --clean \
+          --add-binary "binaries/ffmpeg:." \
+          --name seq2mp4-linux \
+          src/main.py
 
     - name: Upload Linux Artifact
       uses: actions/upload-artifact@v4
