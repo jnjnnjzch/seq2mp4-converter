@@ -18,24 +18,37 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Install System Dependencies
+    - name: Install Build Tools
       run: |
-        dnf install -y python3.11 python3.11-pip python3.11-devel xz wget
+        dnf install -y gcc make openssl-devel bzip2-devel libffi-devel \
+          zlib-devel wget xz xz-devel tar findutils
 
-    - name: Install Requirements
+    - name: Compile Python 3.11 (Shared)
       run: |
-        python3.11 -c "import ssl; print('SSL OK:', ssl.OPENSSL_VERSION)"
-        python3.11 -m pip install --upgrade pip
-        python3.11 -m pip install -r requirements.txt --prefer-binary
-        python3.11 -m pip install pyinstaller
+        cd /tmp
+        wget -q https://www.python.org/ftp/python/3.11.9/Python-3.11.9.tgz
+        tar xzf Python-3.11.9.tgz
+        cd Python-3.11.9
+        ./configure --enable-shared --prefix=/usr/local LDFLAGS="-Wl,-rpath=/usr/local/lib"
+        make -j$(nproc)
+        make install
+        ldconfig
+
+    - name: Install Dependencies
+      run: |
+        python3 -c "import lzma; print('LZMA OK')"
+        python3 -m pip install --upgrade pip
+        python3 -m pip install -r requirements.txt --prefer-binary
+        python3 -m pip install pyinstaller
 
     - name: Setup FFmpeg
       run: |
-        python3.11 scripts/download_ffmpeg.py
+        # 确保你的 scripts/download_ffmpeg.py 的 Linux 分支指向 BtbN
+        python3 scripts/download_ffmpeg.py
 
     - name: Build with PyInstaller
       run: |
-        python3.11 -m PyInstaller --onefile --clean \
+        python3 -m PyInstaller --onefile --clean \
           --add-binary "binaries/ffmpeg:." \
           --name seq2mp4-linux \
           src/main.py
