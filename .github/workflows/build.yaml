@@ -107,8 +107,9 @@ jobs:
       if: runner.os == 'macOS'
       run: |
         rm -f binaries/ffmpeg
-        pip install -r requirements.txt
-        arch -x86_64 python scripts/download_ffmpeg.py
+        echo "Re-installing dependencies for x86_64..."
+        arch -x86_64 pip install --force-reinstall --no-cache-dir -r requirements.txt
+        arch -x86_64 python scripts/download_ffmpeg.py        
         echo "Running on $(uname -m), Python is $(which python)"
         arch -x86_64 pyinstaller --onefile --add-binary "binaries/ffmpeg:." --name seq2mp4-mac-x64 src/main.py
 
