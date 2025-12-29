@@ -91,20 +91,18 @@ def download_and_extract():
         print(f"FFmpeg setup complete: {os.path.join(base_dir, 'ffmpeg')}")
 
     elif "darwin" in system:
-        # Check Architecture for macOS
-        machine = platform.machine().lower()
+        import sysconfig
+        platform_tag = sysconfig.get_platform().lower()
         zip_path = "ffmpeg_mac.zip"
 
-        if "arm" in machine or "aarch64" in machine:
-            # Apple Silicon (M1/M2/M3...)
-            # User specified URL for ARM64
+        if "arm64" in platform_tag:
+            # Apple Silicon (Native ARM64 Python)
             url = "https://www.osxexperts.net/ffmpeg80arm.zip"
-            print(f"Detected Apple Silicon ({machine}). Downloading ARM64 FFmpeg from: {url} ...")
+            print(f"Detected Python Arch: ARM64 ({platform_tag}). Downloading ARM64 FFmpeg...")
         else:
-            # Intel Mac
-            # Default URL for x86_64
+            # Intel Mac or Rosetta (x64 Python)
             url = "https://evermeet.cx/ffmpeg/getrelease/zip"
-            print(f"Detected Intel Mac ({machine}). Downloading x64 FFmpeg from: {url} ...")
+            print(f"Detected Python Arch: x64 ({platform_tag}). Downloading x64 FFmpeg...")
 
         try:
             req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
