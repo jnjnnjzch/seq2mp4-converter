@@ -91,10 +91,20 @@ def download_and_extract():
         print(f"FFmpeg setup complete: {os.path.join(base_dir, 'ffmpeg')}")
 
     elif "darwin" in system:
-        # Download Mac FFmpeg (Evermeet)
-        url = "https://evermeet.cx/ffmpeg/getrelease/zip"
+        # Check Architecture for macOS
+        machine = platform.machine().lower()
         zip_path = "ffmpeg_mac.zip"
-        print(f"Downloading Mac FFmpeg (Evermeet): {url} ...")
+
+        if "arm" in machine or "aarch64" in machine:
+            # Apple Silicon (M1/M2/M3...)
+            # User specified URL for ARM64
+            url = "https://www.osxexperts.net/ffmpeg80arm.zip"
+            print(f"Detected Apple Silicon ({machine}). Downloading ARM64 FFmpeg from: {url} ...")
+        else:
+            # Intel Mac
+            # Default URL for x86_64
+            url = "https://evermeet.cx/ffmpeg/getrelease/zip"
+            print(f"Detected Intel Mac ({machine}). Downloading x64 FFmpeg from: {url} ...")
 
         try:
             req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
@@ -108,17 +118,23 @@ def download_and_extract():
         with zipfile.ZipFile(zip_path, 'r') as zip_ref:
             zip_ref.extractall("temp_ffmpeg")
             
-        src = os.path.join("temp_ffmpeg", "ffmpeg")
-        dst = os.path.join(base_dir, "ffmpeg")
+        # Robust recursive search (handles different zip structures)
+        found = False
+        for root, dirs, files in os.walk("temp_ffmpeg"):
+            if "ffmpeg" in files:
+                src = os.path.join(root, "ffmpeg")
+                dst = os.path.join(base_dir, "ffmpeg")
+                print(f"Moving {src} -> {dst}")
+                shutil.move(src, dst)
+                os.chmod(dst, 0o755) # Grant execution permissions
+                found = True
+                break
         
-        if os.path.exists(src):
-            print(f"Moving {src} -> {dst}")
-            shutil.move(src, dst)
-            os.chmod(dst, 0o755) # 赋予执行权限
-            print(f"FFmpeg setup complete: {dst}")
-        else:
+        if not found:
             print("Error: ffmpeg binary not found in extracted files")
             sys.exit(1)
+            
+        print(f"FFmpeg setup complete: {dst}")
 
 if __name__ == "__main__":
     download_and_extract()

@@ -10,39 +10,66 @@ permissions:
   contents: write
 
 jobs:
-  build:
-    name: Build on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-22.04, windows-latest, macos-latest]
+  build-linux:
+    name: Build Linux (Manylinux)
+    runs-on: ubuntu-latest
+    container:
+      image: quay.io/pypa/manylinux2014_x86_64
 
     steps:
     - uses: actions/checkout@v3
 
-    - name: Set up Python (Linux/Windows)
-      if: runner.os != 'macOS'
+    # Manylinux 镜像极简，需要手动安装 xz 用于解压 ffmpeg
+    - name: Install System Tools
+      run: yum install -y xz wget
+
+    # Manylinux 中 Python 预装在 /opt/python/ 下，不能用 setup-python action
+    - name: Build with PyInstaller
+      run: |
+        # 定义 Python 3.11 路径
+        PYBIN=/opt/python/cp311-cp311/bin
+        
+        # 1. 安装依赖
+        $PYBIN/pip install -r requirements.txt
+        $PYBIN/pip install pyinstaller
+
+        # 2. 下载静态 FFmpeg (调用你的脚本)
+        $PYBIN/python scripts/download_ffmpeg.py
+        
+        # 3. 打包
+        $PYBIN/pyinstaller --onefile --clean \
+          --add-binary "binaries/ffmpeg:." \
+          --name seq2mp4-linux \
+          src/main.py
+
+    - name: Upload Linux Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: seq2mp4-linux
+        path: dist/seq2mp4-linux
+
+  build-win-mac:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest]
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python (Windows)
+      if: runner.os == 'Windows'
       uses: actions/setup-python@v4
       with:
         python-version: '3.11'
 
-    - name: Install Dependencies (Linux/Windows)
-      if: runner.os != 'macOS'
+    - name: Build Windows
+      if: runner.os == 'Windows'
       run: |
         pip install -r requirements.txt
         python scripts/download_ffmpeg.py
-
-    # --- Windows 打包 ---
-    - name: Build with PyInstaller (Windows)
-      if: runner.os == 'Windows'
-      run: |
         pyinstaller --onefile --add-binary "binaries\ffmpeg.exe;." --name seq2mp4-win src/main.py
-
-    # --- Linux 打包 ---
-    - name: Build with PyInstaller (Linux)
-      if: runner.os == 'Linux'
-      run: |
-        pyinstaller --onefile --add-binary "binaries/ffmpeg:." --name seq2mp4-linux src/main.py
 
     - name: Set up Python ARM64 (macOS)
       if: runner.os == 'macOS'
@@ -81,14 +108,24 @@ jobs:
         name: seq2mp4-${{ runner.os }}
         path: dist/seq2mp4*
 
-    - name: Release
-      uses: softprops/action-gh-release@v1
-      if: startsWith(github.ref, 'refs/tags/')
-      with:
-        files: |
-          dist/seq2mp4-linux
-          dist/seq2mp4-win.exe
-          dist/seq2mp4-mac-arm64
-          dist/seq2mp4-mac-x64
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  release:
+    needs: [build-linux, build-win-mac]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: seq2mp4-*
+          merge-multiple: true
+          path: dist
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dist/seq2mp4-linux
+            dist/seq2mp4-win.exe
+            dist/seq2mp4-mac-arm64
+            dist/seq2mp4-mac-x64
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
