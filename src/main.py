@@ -37,7 +37,7 @@ def check_encoder_availability(ffmpeg_bin, encoder_name):
         cmd = [
             ffmpeg_bin, 
             '-hide_banner', '-loglevel', 'error',
-            '-f', 'lavfi', '-i', 'color=c=black:s=64x64:d=0.1',
+            '-f', 'lavfi', '-i', 'color=c=black:s=320x240:d=1',
             '-pix_fmt', 'yuv420p',
             '-c:v', encoder_name,
             '-f', 'null', '-'
