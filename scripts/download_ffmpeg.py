@@ -92,17 +92,19 @@ def download_and_extract():
 
     elif "darwin" in system:
         import sysconfig
+        machine = platform.machine().lower()
         platform_tag = sysconfig.get_platform().lower()
         zip_path = "ffmpeg_mac.zip"
 
-        if "arm64" in platform_tag:
-            # Apple Silicon (Native ARM64 Python)
+        is_arm = "arm64" in platform_tag or ("universal2" in platform_tag and "arm64" in machine)
+        if is_arm:
+            # Apple Silicon (Native ARM64)
             url = "https://www.osxexperts.net/ffmpeg80arm.zip"
-            print(f"Detected Python Arch: ARM64 ({platform_tag}). Downloading ARM64 FFmpeg...")
+            print(f"Detected Arch: ARM64 (Tag: {platform_tag}, Machine: {machine}). Downloading ARM64 FFmpeg...")
         else:
-            # Intel Mac or Rosetta (x64 Python)
+            # Intel Mac (x64) or Rosetta
             url = "https://evermeet.cx/ffmpeg/getrelease/zip"
-            print(f"Detected Python Arch: x64 ({platform_tag}). Downloading x64 FFmpeg...")
+            print(f"Detected Arch: x64 (Tag: {platform_tag}, Machine: {machine}). Downloading x64 FFmpeg...")
 
         try:
             req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})

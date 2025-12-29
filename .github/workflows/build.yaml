@@ -108,9 +108,9 @@ jobs:
       run: |
         rm -f binaries/ffmpeg
         pip install -r requirements.txt
-        python scripts/download_ffmpeg.py
+        arch -x86_64 python scripts/download_ffmpeg.py
         echo "Running on $(uname -m), Python is $(which python)"
-        pyinstaller --onefile --add-binary "binaries/ffmpeg:." --name seq2mp4-mac-x64 src/main.py
+        arch -x86_64 pyinstaller --onefile --add-binary "binaries/ffmpeg:." --name seq2mp4-mac-x64 src/main.py
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
