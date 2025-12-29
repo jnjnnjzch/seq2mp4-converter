@@ -38,6 +38,7 @@ def check_encoder_availability(ffmpeg_bin, encoder_name):
             ffmpeg_bin, 
             '-hide_banner', '-loglevel', 'error',
             '-f', 'lavfi', '-i', 'color=c=black:s=64x64:d=0.1',
+            '-pix_fmt', 'yuv420p',
             '-c:v', encoder_name,
             '-f', 'null', '-'
         ]
@@ -55,7 +56,7 @@ def detect_encoders(ffmpeg_bin):
     通过运行 ffmpeg -encoders 探测可用硬件编码器。
     返回一个 dict，例如 {'nvidia': True, 'amd': False}
     """
-    available = {'nvidia': False, 'amd': False}
+    available = {'nvidia': False, 'amd': False, 'mac_vt': False}
     try:
         # 运行 ffmpeg -encoders
         cmd = [ffmpeg_bin, '-hide_banner', '-encoders']
