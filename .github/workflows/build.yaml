@@ -12,25 +12,28 @@ permissions:
 jobs:
   build-linux:
     name: Build Linux (Manylinux)
-    runs-on: ubuntu-latest 
+    runs-on: ubuntu-latest
+    container:
+      image: quay.io/pypa/manylinux_2_28_x86_64
     steps:
     - uses: actions/checkout@v3
-
-    - name: Build in Manylinux2014 Container
+    - name: Install System Dependencies
       run: |
-        docker run --rm -v $PWD:/work -w /work quay.io/pypa/manylinux2014_x86_64 /bin/bash -c "
-          yum install -y wget xz && \\
-          export PYBIN=/opt/python/cp311-cp311/bin && \\
-          export PATH=\$PYBIN:\$PATH && \\
-          pip install --upgrade pip && \\
-          pip install -r requirements.txt -v --prefer-binary && \\
-          pip install pyinstaller && \\
-          python scripts/download_ffmpeg.py && \\
-          pyinstaller --onefile --clean \\
-            --add-binary 'binaries/ffmpeg:.' \\
-            --name seq2mp4-linux \\
-            src/main.py
-        "
+        dnf install -y python3.11 python3.11-devel python3.11-pip xz wget
+    - name: Install Python Requirements
+      run: |
+        python3.11 -m pip install --upgrade pip
+        python3.11 -m pip install -r requirements.txt --prefer-binary
+        python3.11 -m pip install pyinstaller
+    - name: Setup FFmpeg
+      run: |
+        python3.11 scripts/download_ffmpeg.py
+    - name: Build with PyInstaller
+      run: |
+        python3.11 -m PyInstaller --onefile --clean \
+          --add-binary "binaries/ffmpeg:." \
+          --name seq2mp4-linux \
+          src/main.py
 
     - name: Upload Linux Artifact
       uses: actions/upload-artifact@v4
