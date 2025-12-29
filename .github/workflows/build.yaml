@@ -19,7 +19,7 @@ jobs:
       run: |
         docker run --rm -v $PWD:/work -w /work quay.io/pypa/manylinux2014_x86_64 /bin/bash -c "
           set -e
-          yum install -y wget xz make gcc zlib-devel bzip2-devel libffi-devel tar perl-core openssl-devel
+          yum install -y wget xz xz-devel make gcc zlib-devel bzip2-devel libffi-devel tar perl-core openssl-devel
           cd /tmp
           wget -q https://www.openssl.org/source/openssl-1.1.1w.tar.gz --no-check-certificate
           tar xzf openssl-1.1.1w.tar.gz
