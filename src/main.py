@@ -141,7 +141,7 @@ def get_encoding_params(hardware_type, mode, user_args):
         cmd.extend(['-c:v', 'libx264'])
         cmd.extend(['-crf', str(config['cq'])])
         c_preset = 'veryslow' if config['preset'] == 'quality' else 'medium'
-        if mode == 'small': c_preset = 'veryfast' # 压缩模式下 CPU 也要快点
+        if mode == 'small': c_preset = 'veryslow' # small 模式强制最高压缩
         cmd.extend(['-preset', c_preset])
 
     # 通用参数
