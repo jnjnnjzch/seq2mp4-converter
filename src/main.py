@@ -124,7 +124,7 @@ def get_encoding_params(hardware_type, mode, user_args):
         # 我们做一个简单的转换
         if mode == 'small':
             # 对应高压缩 (cq=28) -> VideoToolbox q=50 左右
-            q_val = 50
+            q_val = 60
         else:
             # 对应高质量 (cq=20) -> VideoToolbox q=75 左右
             q_val = 75
