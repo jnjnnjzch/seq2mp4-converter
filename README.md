@@ -1,6 +1,6 @@
 # SEQ2MP4 Converter
 
-A standalone tool to convert NorPix `.seq` files to compressed MP4 using FFmpeg. It automatically detects hardware acceleration (NVIDIA NVENC / AMD AMF / Apple VideoToolbox) to speed up conversion, falling back to CPU if no GPU is available.
+A standalone tool to convert NorPix `.seq` files to compressed MP4 using FFmpeg **with 30x-100x (100fps) or 150x-450x (30fps) compress rate**. It automatically detects hardware acceleration (NVIDIA NVENC / AMD AMF / Apple VideoToolbox) to speed up conversion, falling back to CPU if no GPU is available.
 
 💡 Need the timestamps? While this tool handles compression, you can use [kiana](https://github.com/jnjnnjzch/kiana_aligner) to extract `.seq` timestamps at lightning speed ⚡. It can process **300GB of data (1M+ timestamps) in just 10s**—running at the limit of 10GbE bandwidth and even faster on local NVMe SSDs!
 
