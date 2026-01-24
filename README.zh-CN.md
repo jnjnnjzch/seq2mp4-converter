@@ -110,7 +110,7 @@ seq2mp4-win.exe input.seq --mode small --cq 24
 
 - NVIDIA：使用 `h264_nvenc`
 - AMD：使用 `h264_amf`
-- MacOS：使用 `h264_videotoolbox`（M1/M2/M3/M4 和 Intel）
+- macOS：使用 `h264_videotoolbox`（M1/M2/M3/M4 和 Intel）
 - CPU：使用 `libx264`（如果未找到 GPU，则回退）
 
 ## 许可证
