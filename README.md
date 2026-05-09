@@ -6,6 +6,23 @@ A standalone tool to convert NorPix `.seq` files to compressed MP4 using FFmpeg 
 
 💡 Need the timestamps? While this tool handles compression, you can use [kiana](https://github.com/jnjnnjzch/kiana_aligner) to extract `.seq` timestamps at lightning speed ⚡. It can process **300GB of data (1M+ timestamps) in just 10s**—running at the limit of 10GbE bandwidth and even faster on local NVMe SSDs!
 
+> Just do as this:
+>```bash
+>pip install kiana
+>```
+>``` python
+>from kiana import BehavioralProcessor,SeqLoader
+>
+>behav_processor = BehavioralProcessor()
+>behav_processor.add_segment(segment_name='seq_file',
+>                     loader=SeqLoader(),
+>                     source="seq/file/path.seq")
+>behav_processor.build()
+>
+>df = behav_processor.master_timeline_df
+>df.to_pickle("anywhere/you/want/to/save")
+>```
+
 ## Download
 Go to the **[Releases](../../releases)** page to download the executable for your platform:
 * **Windows**: `seq2mp4-win.exe`
