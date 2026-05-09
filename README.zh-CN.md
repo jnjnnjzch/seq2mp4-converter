@@ -6,6 +6,23 @@
 
 💡 需要时间戳？虽然此工具处理压缩，但您可以使用 [kiana](https://github.com/jnjnnjzch/kiana_aligner) 以闪电般的速度提取 `.seq` 时间戳 ⚡。它可以在 **仅 10 秒内处理 300GB 数据（100 万+时间戳）**——运行在 10GbE 带宽的极限，在本地 NVMe SSD 上甚至更快！
 
+> 只需如此:
+>```bash
+>pip install kiana
+>```
+>``` python
+>from kiana import BehavioralProcessor,SeqLoader
+>
+>behav_processor = BehavioralProcessor()
+>behav_processor.add_segment(segment_name='seq_file',
+>                     loader=SeqLoader(),
+>                     source="seq/file/path.seq")
+>behav_processor.build()
+>
+>df = behav_processor.master_timeline_df
+>df.to_pickle("anywhere/you/want/to/save")
+>```
+
 ## 下载
 前往 **[Releases](../../releases)** 页面下载适用于您平台的可执行文件：
 * **Windows**：`seq2mp4-win.exe`
